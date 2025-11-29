@@ -172,32 +172,33 @@
             box-shadow: 0 0 5px 2px lime;
         }
 
-        /* Mobile Controls - Bottom Center */
+        /* Mobile Controls - Improved layout */
         #mobile-controls {
             position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
+            bottom: 5px;
+            left: 5px;
+            right: 5px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
             z-index: 30;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 8px;
             border-radius: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 95%;
         }
 
         .mobile-button {
             background-color: #1e90ff;
             color: white;
             border: none;
-            padding: 12px 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            min-width: 80px;
+            padding: 10px 5px;
+            border-radius: 6px;
+            font-size: 11px;
             touch-action: manipulation;
+            min-height: 40px;
+            word-wrap: break-word;
+            white-space: normal;
+            line-height: 1.2;
         }
 
         .mobile-button:disabled {
@@ -343,9 +344,9 @@
             }
             
             .mobile-button {
-                padding: 10px 12px;
-                font-size: 12px;
-                min-width: 70px;
+                font-size: 10px;
+                padding: 8px 4px;
+                min-height: 35px;
             }
             
             #unit-selection {
@@ -368,15 +369,27 @@
             }
             
             #mobile-controls {
-                bottom: 5px;
+                bottom: 3px;
                 padding: 5px;
-                gap: 5px;
+                gap: 3px;
             }
             
             .mobile-button {
-                padding: 8px 10px;
-                font-size: 11px;
-                min-width: 60px;
+                font-size: 9px;
+                padding: 6px 3px;
+                min-height: 32px;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 360px) {
+            .mobile-button {
+                font-size: 8px;
+                padding: 5px 2px;
+            }
+            
+            #mobile-controls {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -452,7 +465,7 @@
             <button class="zoom-button" id="reset-view">⟲</button>
         </div>
 
-        <!-- Mobile Controls -->
+        <!-- Mobile Controls - Improved Layout -->
         <div id="mobile-controls">
             <button class="mobile-button" id="select-units">SELECT</button>
             <button class="mobile-button move" id="move-unit">MOVE</button>
@@ -854,7 +867,7 @@
             return Math.sqrt(dx * dx + dy * dy);
         }
 
-        // Zoom from a specific point
+        // Zoom from a specific point - INCREASED ZOOM OUT RANGE
         function zoomFromPoint(scaleFactor, x, y) {
             const rect = gameViewport.getBoundingClientRect();
             const viewportX = x - rect.left;
@@ -864,8 +877,8 @@
             const mapX = (viewportX - viewState.offsetX) / viewState.scale;
             const mapY = (viewportY - viewState.offsetY) / viewState.scale;
             
-            // Apply the scale
-            const newScale = Math.max(0.1, Math.min(3, viewState.scale * scaleFactor));
+            // Apply the scale - CHANGED: Increased minimum zoom from 0.1 to 0.05
+            const newScale = Math.max(0.05, Math.min(3, viewState.scale * scaleFactor));
             
             // Adjust offset so the point stays under the cursor
             viewState.offsetX = viewportX - mapX * newScale;
@@ -875,7 +888,7 @@
             updateView();
         }
 
-        // Zoom from the center of the viewport
+        // Zoom from the center of the viewport - INCREASED ZOOM OUT RANGE
         function zoomFromCenter(scaleFactor) {
             const rect = gameViewport.getBoundingClientRect();
             const centerX = rect.width / 2;
@@ -894,7 +907,7 @@
                 if (gameState.selectedSub && gameState.selectedSub.id === sub.id) {
                     unitItem.classList.add('selected');
                 }
-                unitItem.innerHTML = `Submarine ${sub.id} - ${sub.hp} HP`;
+                unitItem.innerHTML = `Sub ${sub.id} - ${sub.hp} HP`;
                 unitItem.addEventListener('click', () => {
                     selectSubmarine(sub);
                     updateUnitSelection();
