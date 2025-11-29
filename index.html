@@ -1,0 +1,2352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Submarine Warfare - Complete</title>
+    <link rel="icon" href="https://github.com/TitanBusinessPros/NGA-1/raw/main/Submarine.png" type="image/png">
+    <style>
+        /* ===== SIZE CUSTOMIZATION VARIABLES ===== */
+        :root {
+            --base-size: 900px; /* 5 times bigger (was 180px) */
+            --submarine-width: 320px; /* 2 times bigger (was 160px) */
+            --submarine-height: 260px; /* 2 times bigger (was 130px) */
+            --jet-width: 290px; /* 2 times bigger (was 145px) */
+            --jet-height: 244px; /* 2 times bigger (was 122px) */
+            --map-size: 6000px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            background-color: #0a192f;
+            color: white;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #game-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background-color: #0a192f;
+            overflow: hidden;
+        }
+
+        #game-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            background-color: rgba(10, 25, 47, 0.8);
+            z-index: 20;
+            flex-wrap: wrap;
+        }
+
+        .player-info {
+            display: flex;
+            flex-direction: column;
+            background-color: rgba(0, 0, 50, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            min-width: 200px;
+            margin: 5px;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .player-info h3 {
+            margin-bottom: 5px;
+            color: #1e90ff;
+            font-size: 14px;
+        }
+
+        .player-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        #game-viewport {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        #game-map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-image: url('https://github.com/TitanBusinessPros/Navy-War1/raw/main/Navy%20War%20Tile-1.png');
+            background-size: 200px;
+            transform-origin: 0 0;
+            transition: transform 0.3s;
+        }
+
+        #turn-info {
+            position: absolute;
+            top: 120px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        #turn-counter {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e90ff;
+        }
+
+        #round-timer {
+            font-size: 16px;
+            color: white;
+        }
+
+        .submarine {
+            position: absolute;
+            width: var(--submarine-width);
+            height: var(--submarine-height);
+            background-image: url('https://github.com/TitanBusinessPros/NGA-1/raw/main/Submarine.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 2;
+            transition: transform 0.5s;
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        .jet {
+            position: absolute;
+            width: var(--jet-width);
+            height: var(--jet-height);
+            background-image: url('https://github.com/TitanBusinessPros/NGA-1/raw/main/Jet%205.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 2;
+            transition: transform 0.3s;
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        .base {
+            position: absolute;
+            width: var(--base-size);
+            height: var(--base-size);
+            background-image: url('https://github.com/TitanBusinessPros/NGA-1/raw/main/Submarine-Navy-Base.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 2;
+        }
+
+        .base-destroyed {
+            filter: grayscale(100%) brightness(0.5);
+        }
+
+        .health-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .health-fill {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 100%;
+            transition: width 0.5s;
+        }
+
+        .damage-animation {
+            animation: damageFlash 0.5s;
+        }
+
+        @keyframes damageFlash {
+            0% { background-color: white; }
+            100% { background-color: inherit; }
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 100%;
+            padding: 0 10px;
+        }
+
+        .control-button {
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            min-width: 120px;
+            touch-action: manipulation;
+        }
+
+        .control-button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        #message-log {
+            position: absolute;
+            bottom: 200px;
+            left: 10px;
+            right: 10px;
+            height: 120px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            padding: 10px;
+            overflow-y: auto;
+            z-index: 20;
+            font-size: 12px;
+        }
+
+        .message {
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .player-1 { border-left: 3px solid #1e90ff; }
+        .player-2 { border-left: 3px solid #ff4444; }
+        .player-3 { border-left: 3px solid #44ff44; }
+        .player-4 { border-left: 3px solid #ffff44; }
+
+        .selected {
+            box-shadow: 0 0 10px 3px yellow !important;
+        }
+
+        .can-attack {
+            box-shadow: 0 0 5px 2px lime;
+        }
+
+        #zoom-controls {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 20;
+        }
+
+        .zoom-button {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        #mini-map {
+            position: absolute;
+            top: 200px;
+            right: 20px;
+            width: 150px;
+            height: 120px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 2px solid #1e90ff;
+            border-radius: 5px;
+            z-index: 20;
+            overflow: hidden;
+        }
+
+        #mini-map-view {
+            position: absolute;
+            border: 2px solid yellow;
+            background-color: rgba(255, 255, 0, 0.2);
+            z-index: 21;
+        }
+
+        #pan-controls {
+            position: absolute;
+            bottom: 150px;
+            right: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(3, 50px);
+            gap: 5px;
+            z-index: 20;
+        }
+
+        .pan-button {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .center-button {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        #zoom-level {
+            position: absolute;
+            top: 150px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 20;
+        }
+        
+        .unit-hp {
+            position: absolute;
+            bottom: -20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: white;
+            text-shadow: 1px 1px 1px black;
+        }
+        
+        .attack-cooldown {
+            position: absolute;
+            top: -15px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: #ff4444;
+            text-shadow: 1px 1px 1px black;
+        }
+        
+        /* Size adjustment info */
+        #size-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 20;
+            max-width: 250px;
+        }
+        
+        /* Movement indicator */
+        .movement-line {
+            position: absolute;
+            background-color: rgba(255, 255, 0, 0.7);
+            height: 3px;
+            transform-origin: 0 0;
+            pointer-events: none;
+            z-index: 3;
+        }
+        
+        .movement-destination {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: rgba(255, 255, 0, 0.9);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 3;
+        }
+        
+        /* Control mode indicator */
+        #control-mode {
+            position: absolute;
+            top: 180px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 20;
+            font-size: 14px;
+        }
+        
+        #control-mode.active {
+            background-color: rgba(30, 144, 255, 0.7);
+        }
+        
+        /* Movement button */
+        #move-unit {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 20;
+            touch-action: manipulation;
+        }
+        
+        /* Game Over Screen */
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        #game-over h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        
+        #game-over p {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        
+        #restart-button {
+            background-color: #1e90ff;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            touch-action: manipulation;
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            #game-ui {
+                padding: 5px;
+            }
+            
+            .player-info {
+                min-width: 120px;
+                padding: 8px;
+                margin: 2px;
+            }
+            
+            .player-info h3 {
+                font-size: 12px;
+            }
+            
+            .player-stats {
+                font-size: 10px;
+            }
+            
+            #turn-info {
+                top: 80px;
+                left: 10px;
+                padding: 8px 12px;
+            }
+            
+            #turn-counter {
+                font-size: 16px;
+            }
+            
+            #round-timer {
+                font-size: 14px;
+            }
+            
+            #controls {
+                bottom: 10px;
+                gap: 5px;
+            }
+            
+            .control-button {
+                padding: 12px 15px;
+                font-size: 14px;
+                min-width: 100px;
+            }
+            
+            #message-log {
+                bottom: 180px;
+                height: 100px;
+            }
+            
+            .message {
+                font-size: 11px;
+            }
+            
+            #zoom-controls {
+                top: 80px;
+                right: 10px;
+            }
+            
+            .zoom-button {
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+            }
+            
+            #mini-map {
+                top: 150px;
+                right: 10px;
+                width: 120px;
+                height: 90px;
+            }
+            
+            #pan-controls {
+                bottom: 120px;
+                right: 10px;
+                grid-template-columns: repeat(3, 45px);
+                grid-template-rows: repeat(3, 45px);
+            }
+            
+            .pan-button {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+            
+            #zoom-level {
+                top: 130px;
+                right: 10px;
+                font-size: 12px;
+            }
+            
+            #control-mode {
+                top: 140px;
+                left: 10px;
+                font-size: 12px;
+                padding: 8px;
+            }
+            
+            #move-unit {
+                bottom: 60px;
+                right: 10px;
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+            
+            #size-info {
+                bottom: 10px;
+                right: 10px;
+                font-size: 10px;
+                padding: 8px;
+                max-width: 200px;
+            }
+        }
+        
+        /* Pinch zoom container */
+        #zoom-pinch-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            touch-action: none;
+        }
+        
+        /* Touch controls for mobile */
+        .touch-controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 25;
+        }
+        
+        .touch-button {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(30, 144, 255, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+    </style>
+</head>
+<body>
+    <!-- Game Container -->
+    <div id="game-container">
+        <!-- Game UI -->
+        <div id="game-ui">
+            <div class="player-info player-1">
+                <h3>Player 1 (You)</h3>
+                <div class="player-stats">
+                    <span>Base HP: <span id="p1-base-hp">500</span></span>
+                    <span>Subs: <span id="p1-subs">1</span></span>
+                    <span>Jets: <span id="p1-jets">5</span></span>
+                </div>
+                <div class="health-bar">
+                    <div class="health-fill" id="p1-base-health" style="width: 100%;"></div>
+                </div>
+            </div>
+            
+            <div class="player-info player-2">
+                <h3>Player 2 (AI)</h3>
+                <div class="player-stats">
+                    <span>Base HP: <span id="p2-base-hp">500</span></span>
+                    <span>Subs: <span id="p2-subs">1</span></span>
+                    <span>Jets: <span id="p2-jets">5</span></span>
+                </div>
+                <div class="health-bar">
+                    <div class="health-fill" id="p2-base-health" style="width: 100%;"></div>
+                </div>
+            </div>
+            
+            <div class="player-info player-3">
+                <h3>Player 3 (AI)</h3>
+                <div class="player-stats">
+                    <span>Base HP: <span id="p3-base-hp">500</span></span>
+                    <span>Subs: <span id="p3-subs">1</span></span>
+                    <span>Jets: <span id="p3-jets">5</span></span>
+                </div>
+                <div class="health-bar">
+                    <div class="health-fill" id="p3-base-health" style="width: 100%;"></div>
+                </div>
+            </div>
+            
+            <div class="player-info player-4">
+                <h3>Player 4 (AI)</h3>
+                <div class="player-stats">
+                    <span>Base HP: <span id="p4-base-hp">500</span></span>
+                    <span>Subs: <span id="p4-subs">1</span></span>
+                    <span>Jets: <span id="p4-jets">5</span></span>
+                </div>
+                <div class="health-bar">
+                    <div class="health-fill" id="p4-base-health" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Turn Info -->
+        <div id="turn-info">
+            <div id="turn-counter">Turn: 1</div>
+            <div id="round-timer">Time: 60s</div>
+        </div>
+
+        <!-- Control Mode Indicator -->
+        <div id="control-mode">Map Pan Mode (Press M to move units)</div>
+
+        <!-- Size Adjustment Info -->
+        <div id="size-info">
+            <strong>Customize Sizes:</strong><br>
+            Edit CSS variables at top of style section<br>
+            --base-size: 900px<br>
+            --submarine-width: 320px<br>
+            --submarine-height: 260px<br>
+            --jet-width: 290px<br>
+            --jet-height: 244px<br>
+            --map-size: 6000px
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="game-over">
+            <h2 id="game-over-title">Game Over</h2>
+            <p id="game-over-message"></p>
+            <button id="restart-button">Play Again</button>
+        </div>
+
+        <!-- Zoom Controls -->
+        <div id="zoom-controls">
+            <button class="zoom-button" id="zoom-in">+</button>
+            <button class="zoom-button" id="zoom-out">-</button>
+            <button class="zoom-button" id="reset-view">⟲</button>
+        </div>
+
+        <!-- Zoom Level Display -->
+        <div id="zoom-level">Zoom: 100%</div>
+
+        <!-- Mini Map -->
+        <div id="mini-map">
+            <div id="mini-map-view"></div>
+        </div>
+
+        <!-- Move Unit Button -->
+        <button id="move-unit" style="display: none;">MOVE UNIT</button>
+
+        <!-- Pan Controls -->
+        <div id="pan-controls">
+            <button class="pan-button" id="pan-nw">↖</button>
+            <button class="pan-button" id="pan-n">↑</button>
+            <button class="pan-button" id="pan-ne">↗</button>
+            <button class="pan-button" id="pan-w">←</button>
+            <button class="pan-button center-button" id="center-map">⊙</button>
+            <button class="pan-button" id="pan-e">→</button>
+            <button class="pan-button" id="pan-sw">↙</button>
+            <button class="pan-button" id="pan-s">↓</button>
+            <button class="pan-button" id="pan-se">↘</button>
+        </div>
+
+        <!-- Pinch Zoom Area -->
+        <div id="zoom-pinch-area"></div>
+
+        <!-- Game Viewport -->
+        <div id="game-viewport">
+            <div id="game-map"></div>
+        </div>
+
+        <!-- Message Log -->
+        <div id="message-log">
+            <div class="message"><strong>HOW TO PLAY:</strong></div>
+            <div class="message">1. Click on your submarine or jet to select it</div>
+            <div class="message">2. Press M to switch to Unit Move mode</div>
+            <div class="message">3. Click MOVE UNIT button to move selected unit</div>
+            <div class="message">4. Use buttons to attack (once per turn per unit)</div>
+            <div class="message">5. Destroy enemy bases to win!</div>
+        </div>
+
+        <!-- Controls -->
+        <div id="controls">
+            <button class="control-button" id="attack-sub">Attack with Sub</button>
+            <button class="control-button" id="attack-jet">Attack with Jet</button>
+            <button class="control-button" id="deploy-jet">Deploy Jet</button>
+            <button class="control-button" id="end-turn">End Turn</button>
+        </div>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="background-music" loop>
+        <source src="https://github.com/TitanBusinessPros/Navy-War1/raw/main/Navy%20War-1%20Song.mp3" type="audio/mp3">
+    </audio>
+    <audio id="attack-sound">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-short-laser-gun-shot-1670.mp3" type="audio/mp3">
+    </audio>
+
+    <script>
+        // Game state
+        const gameState = {
+            players: [
+                { id: 1, baseHP: 500, submarines: [], jets: [], isAI: false, turnsTaken: 0, baseDestroyed: false },
+                { id: 2, baseHP: 500, submarines: [], jets: [], isAI: true, turnsTaken: 0, baseDestroyed: false },
+                { id: 3, baseHP: 500, submarines: [], jets: [], isAI: true, turnsTaken: 0, baseDestroyed: false },
+                { id: 4, baseHP: 500, submarines: [], jets: [], isAI: true, turnsTaken: 0, baseDestroyed: false }
+            ],
+            currentPlayer: 1,
+            roundTime: 60,
+            roundTimer: null,
+            gameMap: null,
+            roundCount: 1,
+            selectedSub: null,
+            selectedJet: null,
+            totalTurns: 1,
+            moveModeActive: false,
+            gameOver: false,
+            isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+        };
+
+        // View state
+        const viewState = {
+            scale: 1,
+            offsetX: 0,
+            offsetY: 0,
+            isDragging: false,
+            dragStartX: 0,
+            dragStartY: 0,
+            dragStartOffsetX: 0,
+            dragStartOffsetY: 0,
+            // For pinch zoom
+            pinchZoom: false,
+            initialPinchDistance: 0,
+            initialScale: 1
+        };
+
+        // DOM elements
+        const turnCounterDisplay = document.getElementById('turn-counter');
+        const roundTimerDisplay = document.getElementById('round-timer');
+        const gameMap = document.getElementById('game-map');
+        const gameViewport = document.getElementById('game-viewport');
+        const messageLog = document.getElementById('message-log');
+        const backgroundMusic = document.getElementById('background-music');
+        const attackSound = document.getElementById('attack-sound');
+        const attackSubButton = document.getElementById('attack-sub');
+        const attackJetButton = document.getElementById('attack-jet');
+        const deployJetButton = document.getElementById('deploy-jet');
+        const endTurnButton = document.getElementById('end-turn');
+        const zoomInButton = document.getElementById('zoom-in');
+        const zoomOutButton = document.getElementById('zoom-out');
+        const resetViewButton = document.getElementById('reset-view');
+        const zoomLevelDisplay = document.getElementById('zoom-level');
+        const miniMapView = document.getElementById('mini-map-view');
+        const centerMapButton = document.getElementById('center-map');
+        const controlModeDisplay = document.getElementById('control-mode');
+        const moveUnitButton = document.getElementById('move-unit');
+        const gameOverScreen = document.getElementById('game-over');
+        const gameOverTitle = document.getElementById('game-over-title');
+        const gameOverMessage = document.getElementById('game-over-message');
+        const restartButton = document.getElementById('restart-button');
+        const zoomPinchArea = document.getElementById('zoom-pinch-area');
+
+        // Pan buttons
+        const panButtons = {
+            nw: document.getElementById('pan-nw'),
+            n: document.getElementById('pan-n'),
+            ne: document.getElementById('pan-ne'),
+            w: document.getElementById('pan-w'),
+            e: document.getElementById('pan-e'),
+            sw: document.getElementById('pan-sw'),
+            s: document.getElementById('pan-s'),
+            se: document.getElementById('pan-se')
+        };
+
+        // Game constants
+        const SUBMARINE_HP = 200;
+        const SUBMARINE_DAMAGE = 100;
+        const SUBMARINE_RANGE = 200;
+        const SUBMARINE_MOVE_RANGE = 300;
+        const JET_DAMAGE = 50;
+        const JET_RANGE = 500;
+        const JET_MOVE_RANGE = 500;
+        const BASE_HP = 500;
+        const JETS_PER_PLAYER = 5;
+        
+        // Map size from CSS variable - FIXED: Remove 'px' from the value
+        const MAP_WIDTH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--map-size').replace('px', '')) || 6000;
+        const MAP_HEIGHT = MAP_WIDTH;
+
+        // Get CSS variable values for unit sizes - FIXED VERSION
+        function getUnitSizes() {
+            const rootStyles = getComputedStyle(document.documentElement);
+            const getValue = (varName) => {
+                const value = rootStyles.getPropertyValue(varName);
+                return value ? parseInt(value.replace('px', '')) : 0;
+            };
+            
+            return {
+                baseSize: getValue('--base-size') || 900,
+                subWidth: getValue('--submarine-width') || 320,
+                subHeight: getValue('--submarine-height') || 260,
+                jetWidth: getValue('--jet-width') || 290,
+                jetHeight: getValue('--jet-height') || 244
+            };
+        }
+
+        // Initialize the game when page loads
+        window.addEventListener('load', function() {
+            // Set up the game map
+            gameMap.style.width = MAP_WIDTH + 'px';
+            gameMap.style.height = MAP_HEIGHT + 'px';
+            
+            // Position bases at corners
+            placeBases();
+            
+            // Add initial submarines for each player
+            gameState.players.forEach(player => {
+                addSubmarine(player.id);
+            });
+            
+            // Update UI
+            updatePlayerUI();
+            updateTurnDisplay();
+            
+            // Set up view controls
+            setupViewControls();
+            
+            // Start the first round
+            startRound();
+            
+            // Start background music
+            backgroundMusic.volume = 0.5;
+            backgroundMusic.play().catch(e => {
+                console.log("Audio play failed:", e);
+                addMessage("Click anywhere to start audio");
+            });
+            
+            // Allow audio to start on user interaction
+            document.addEventListener('click', function() {
+                if (backgroundMusic.paused) {
+                    backgroundMusic.play();
+                }
+            }, { once: true });
+            
+            // Center the view on player 1 base initially
+            centerOnPlayer(1);
+            
+            // Update control mode display
+            updateControlModeDisplay();
+            
+            addMessage("Game started! Select your submarine to begin.");
+            
+            // Add mobile-specific instructions
+            if (gameState.isMobile) {
+                addMessage("Mobile controls: Drag to pan, pinch to zoom, tap units to select");
+            }
+        });
+
+        // Set up view controls
+        function setupViewControls() {
+            // Zoom controls - FIXED: Zoom from center
+            zoomInButton.addEventListener('click', () => {
+                zoomFromCenter(1.2);
+            });
+            
+            zoomOutButton.addEventListener('click', () => {
+                zoomFromCenter(1/1.2);
+            });
+            
+            resetViewButton.addEventListener('click', () => {
+                viewState.scale = 1;
+                viewState.offsetX = 0;
+                viewState.offsetY = 0;
+                updateView();
+            });
+            
+            centerMapButton.addEventListener('click', () => {
+                centerOnPlayer(1);
+            });
+            
+            // Pan controls
+            panButtons.nw.addEventListener('click', () => panView(-100, -100));
+            panButtons.n.addEventListener('click', () => panView(0, -100));
+            panButtons.ne.addEventListener('click', () => panView(100, -100));
+            panButtons.w.addEventListener('click', () => panView(-100, 0));
+            panButtons.e.addEventListener('click', () => panView(100, 0));
+            panButtons.sw.addEventListener('click', () => panView(-100, 100));
+            panButtons.s.addEventListener('click', () => panView(0, 100));
+            panButtons.se.addEventListener('click', () => panView(100, 100));
+            
+            // Mouse wheel zoom - FIXED: Zoom from mouse position
+            gameViewport.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const rect = gameViewport.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                if (e.deltaY < 0) {
+                    zoomFromPoint(1.1, x, y);
+                } else {
+                    zoomFromPoint(1/1.1, x, y);
+                }
+            });
+            
+            // M key to toggle move mode
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'KeyM') {
+                    e.preventDefault();
+                    toggleMoveMode();
+                }
+                
+                // WASD panning
+                const panAmount = 50;
+                switch(e.key) {
+                    case 'w': panView(0, panAmount); break;
+                    case 's': panView(0, -panAmount); break;
+                    case 'a': panView(panAmount, 0); break;
+                    case 'd': panView(-panAmount, 0); break;
+                }
+            });
+            
+            // Drag to pan
+            gameViewport.addEventListener('mousedown', (e) => {
+                if (e.button === 0 && !gameState.moveModeActive) {
+                    viewState.isDragging = true;
+                    viewState.dragStartX = e.clientX;
+                    viewState.dragStartY = e.clientY;
+                    viewState.dragStartOffsetX = viewState.offsetX;
+                    viewState.dragStartOffsetY = viewState.offsetY;
+                    gameViewport.style.cursor = 'grabbing';
+                }
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (viewState.isDragging && !gameState.moveModeActive) {
+                    const deltaX = e.clientX - viewState.dragStartX;
+                    const deltaY = e.clientY - viewState.dragStartY;
+                    
+                    viewState.offsetX = viewState.dragStartOffsetX + deltaX;
+                    viewState.offsetY = viewState.dragStartOffsetY + deltaY;
+                    
+                    updateView();
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                viewState.isDragging = false;
+                gameViewport.style.cursor = gameState.moveModeActive ? 'crosshair' : 'grab';
+            });
+            
+            // Move unit button
+            moveUnitButton.addEventListener('click', () => {
+                if (gameState.currentPlayer !== 1) {
+                    addMessage("It's not your turn!");
+                    return;
+                }
+                
+                if (!gameState.selectedSub && !gameState.selectedJet) {
+                    addMessage("Select a unit first!");
+                    return;
+                }
+                
+                // Activate move mode
+                gameState.moveModeActive = true;
+                updateControlModeDisplay();
+                addMessage("Click on the map to move the selected unit");
+            });
+            
+            // Click to move units in move mode
+            gameViewport.addEventListener('click', (e) => {
+                if (gameState.moveModeActive && gameState.currentPlayer === 1 && !gameState.gameOver) {
+                    const rect = gameViewport.getBoundingClientRect();
+                    
+                    // Convert viewport coordinates to map coordinates
+                    const mapX = (e.clientX - rect.left - viewState.offsetX) / viewState.scale;
+                    const mapY = (e.clientY - rect.top - viewState.offsetY) / viewState.scale;
+                    
+                    if (gameState.selectedSub) {
+                        if (moveSubmarine(gameState.selectedSub, mapX, mapY)) {
+                            // Successfully moved, exit move mode
+                            gameState.moveModeActive = false;
+                            updateControlModeDisplay();
+                        }
+                    } else if (gameState.selectedJet) {
+                        if (moveJet(gameState.selectedJet, mapX, mapY)) {
+                            // Successfully moved, exit move mode
+                            gameState.moveModeActive = false;
+                            updateControlModeDisplay();
+                        }
+                    }
+                }
+            });
+            
+            // Restart button
+            restartButton.addEventListener('click', () => {
+                restartGame();
+            });
+            
+            // Mobile touch controls
+            setupTouchControls();
+        }
+
+        // Set up touch controls for mobile
+        function setupTouchControls() {
+            if (!gameState.isMobile) return;
+            
+            let touchStartX, touchStartY, touchStartOffsetX, touchStartOffsetY;
+            let isTouchPanning = false;
+            let lastTouchTime = 0;
+            
+            // Touch start for panning
+            gameViewport.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1 && !gameState.moveModeActive) {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    touchStartX = touch.clientX;
+                    touchStartY = touch.clientY;
+                    touchStartOffsetX = viewState.offsetX;
+                    touchStartOffsetY = viewState.offsetY;
+                    isTouchPanning = true;
+                    
+                    // Double tap detection
+                    const currentTime = new Date().getTime();
+                    if (currentTime - lastTouchTime < 300) {
+                        // Double tap - zoom in at tap location
+                        zoomFromPoint(1.5, touch.clientX, touch.clientY);
+                    }
+                    lastTouchTime = currentTime;
+                } else if (e.touches.length === 2) {
+                    // Pinch zoom start
+                    e.preventDefault();
+                    viewState.pinchZoom = true;
+                    viewState.initialPinchDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                    viewState.initialScale = viewState.scale;
+                }
+            });
+            
+            // Touch move for panning and pinch zoom
+            gameViewport.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && isTouchPanning && !gameState.moveModeActive) {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const deltaX = touch.clientX - touchStartX;
+                    const deltaY = touch.clientY - touchStartY;
+                    
+                    viewState.offsetX = touchStartOffsetX + deltaX;
+                    viewState.offsetY = touchStartOffsetY + deltaY;
+                    
+                    updateView();
+                } else if (e.touches.length === 2 && viewState.pinchZoom) {
+                    // Pinch zoom
+                    e.preventDefault();
+                    const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+                    const scaleChange = currentDistance / viewState.initialPinchDistance;
+                    
+                    // Calculate center point between two touches
+                    const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    
+                    // Apply zoom from the center point
+                    zoomFromPoint(scaleChange, centerX, centerY);
+                    
+                    // Reset initial values for next calculation
+                    viewState.initialPinchDistance = currentDistance;
+                    viewState.initialScale = viewState.scale;
+                }
+            });
+            
+            // Touch end
+            gameViewport.addEventListener('touchend', (e) => {
+                isTouchPanning = false;
+                viewState.pinchZoom = false;
+            });
+            
+            // Touch to move units in move mode
+            gameViewport.addEventListener('touchend', (e) => {
+                if (gameState.moveModeActive && gameState.currentPlayer === 1 && !gameState.gameOver && e.changedTouches.length === 1) {
+                    const touch = e.changedTouches[0];
+                    const rect = gameViewport.getBoundingClientRect();
+                    
+                    // Convert touch coordinates to map coordinates
+                    const mapX = (touch.clientX - rect.left - viewState.offsetX) / viewState.scale;
+                    const mapY = (touch.clientY - rect.top - viewState.offsetY) / viewState.scale;
+                    
+                    if (gameState.selectedSub) {
+                        if (moveSubmarine(gameState.selectedSub, mapX, mapY)) {
+                            // Successfully moved, exit move mode
+                            gameState.moveModeActive = false;
+                            updateControlModeDisplay();
+                        }
+                    } else if (gameState.selectedJet) {
+                        if (moveJet(gameState.selectedJet, mapX, mapY)) {
+                            // Successfully moved, exit move mode
+                            gameState.moveModeActive = false;
+                            updateControlModeDisplay();
+                        }
+                    }
+                }
+            });
+            
+            // Make control buttons more touch-friendly
+            document.querySelectorAll('.control-button, .zoom-button, .pan-button, #move-unit, #restart-button').forEach(button => {
+                button.addEventListener('touchstart', (e) => {
+                    e.stopPropagation();
+                });
+            });
+        }
+
+        // Calculate distance between two touch points
+        function getTouchDistance(touch1, touch2) {
+            const dx = touch1.clientX - touch2.clientX;
+            const dy = touch1.clientY - touch2.clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        // Zoom from a specific point (mouse position or touch point)
+        function zoomFromPoint(scaleFactor, x, y) {
+            const rect = gameViewport.getBoundingClientRect();
+            const viewportX = x - rect.left;
+            const viewportY = y - rect.top;
+            
+            // Convert the point to map coordinates
+            const mapX = (viewportX - viewState.offsetX) / viewState.scale;
+            const mapY = (viewportY - viewState.offsetY) / viewState.scale;
+            
+            // Apply the scale
+            const newScale = Math.max(0.1, Math.min(3, viewState.scale * scaleFactor));
+            
+            // Adjust offset so the point stays under the cursor
+            viewState.offsetX = viewportX - mapX * newScale;
+            viewState.offsetY = viewportY - mapY * newScale;
+            viewState.scale = newScale;
+            
+            updateView();
+        }
+
+        // Zoom from the center of the viewport
+        function zoomFromCenter(scaleFactor) {
+            const rect = gameViewport.getBoundingClientRect();
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            zoomFromPoint(scaleFactor, centerX + rect.left, centerY + rect.top);
+        }
+
+        // Toggle move mode
+        function toggleMoveMode() {
+            if (gameState.currentPlayer !== 1) {
+                addMessage("It's not your turn!");
+                return;
+            }
+            
+            if (!gameState.selectedSub && !gameState.selectedJet) {
+                addMessage("Select a unit first!");
+                return;
+            }
+            
+            gameState.moveModeActive = !gameState.moveModeActive;
+            updateControlModeDisplay();
+            
+            if (gameState.moveModeActive) {
+                addMessage("Click on the map to move the selected unit");
+            } else {
+                addMessage("Move mode deactivated");
+            }
+        }
+
+        // Update control mode display
+        function updateControlModeDisplay() {
+            if (gameState.moveModeActive) {
+                controlModeDisplay.textContent = "Unit Move Mode (Press M to cancel)";
+                controlModeDisplay.classList.add('active');
+                gameViewport.style.cursor = 'crosshair';
+                moveUnitButton.style.display = 'block';
+                moveUnitButton.textContent = "CANCEL MOVE";
+            } else {
+                controlModeDisplay.textContent = "Map Pan Mode (Select unit and press M to move)";
+                controlModeDisplay.classList.remove('active');
+                gameViewport.style.cursor = 'grab';
+                
+                if (gameState.selectedSub || gameState.selectedJet) {
+                    moveUnitButton.style.display = 'block';
+                    moveUnitButton.textContent = "MOVE UNIT";
+                } else {
+                    moveUnitButton.style.display = 'none';
+                }
+            }
+        }
+
+        // Update the view transform
+        function updateView() {
+            gameMap.style.transform = `translate(${viewState.offsetX}px, ${viewState.offsetY}px) scale(${viewState.scale})`;
+            zoomLevelDisplay.textContent = `Zoom: ${Math.round(viewState.scale * 100)}%`;
+            updateMiniMap();
+        }
+
+        // Update turn display
+        function updateTurnDisplay() {
+            turnCounterDisplay.textContent = `Turn: ${gameState.totalTurns}`;
+            roundTimerDisplay.textContent = `Time: ${gameState.roundTime}s`;
+        }
+
+        // Pan the view
+        function panView(deltaX, deltaY) {
+            viewState.offsetX += deltaX;
+            viewState.offsetY += deltaY;
+            updateView();
+        }
+
+        // Center view on a player's base
+        function centerOnPlayer(playerId) {
+            const base = document.getElementById(`base-${playerId}`);
+            if (base) {
+                const baseRect = base.getBoundingClientRect();
+                const viewportRect = gameViewport.getBoundingClientRect();
+                
+                viewState.offsetX = -base.offsetLeft + (viewportRect.width / 2) - (baseRect.width / 2);
+                viewState.offsetY = -base.offsetTop + (viewportRect.height / 2) - (baseRect.height / 2);
+                
+                updateView();
+            }
+        }
+
+        // Update mini map
+        function updateMiniMap() {
+            const viewportRect = gameViewport.getBoundingClientRect();
+            const mapRect = gameMap.getBoundingClientRect();
+            
+            // Calculate viewport bounds in map coordinates
+            const viewLeft = -viewState.offsetX / viewState.scale;
+            const viewTop = -viewState.offsetY / viewState.scale;
+            const viewWidth = viewportRect.width / viewState.scale;
+            const viewHeight = viewportRect.height / viewState.scale;
+            
+            // Update mini map view box
+            const miniMapRect = document.getElementById('mini-map').getBoundingClientRect();
+            const scaleX = miniMapRect.width / MAP_WIDTH;
+            const scaleY = miniMapRect.height / MAP_HEIGHT;
+            
+            miniMapView.style.left = (viewLeft * scaleX) + 'px';
+            miniMapView.style.top = (viewTop * scaleY) + 'px';
+            miniMapView.style.width = (viewWidth * scaleX) + 'px';
+            miniMapView.style.height = (viewHeight * scaleY) + 'px';
+        }
+
+        // Place player bases at the corners of the map
+        function placeBases() {
+            const unitSizes = getUnitSizes();
+            const baseMargin = 800;
+            const basePositions = [
+                { x: baseMargin, y: baseMargin },
+                { x: MAP_WIDTH - baseMargin - unitSizes.baseSize, y: baseMargin },
+                { x: baseMargin, y: MAP_HEIGHT - baseMargin - unitSizes.baseSize },
+                { x: MAP_WIDTH - baseMargin - unitSizes.baseSize, y: MAP_HEIGHT - baseMargin - unitSizes.baseSize }
+            ];
+            
+            gameState.players.forEach((player, index) => {
+                const base = document.createElement('div');
+                base.className = 'base';
+                base.id = `base-${player.id}`;
+                base.style.left = basePositions[index].x + 'px';
+                base.style.top = basePositions[index].y + 'px';
+                gameMap.appendChild(base);
+            });
+        }
+
+        // Add a submarine for a player
+        function addSubmarine(playerId) {
+            const player = gameState.players.find(p => p.id === playerId);
+            if (!player || player.baseDestroyed) return;
+            
+            const unitSizes = getUnitSizes();
+            
+            // Find player's base position
+            const base = document.getElementById(`base-${playerId}`);
+            
+            // Position submarine near the base
+            let x, y;
+            const spreadDistance = 300;
+            
+            if (playerId === 1) {
+                x = base.offsetLeft + unitSizes.baseSize + spreadDistance;
+                y = base.offsetTop + unitSizes.baseSize + spreadDistance;
+            } else if (playerId === 2) {
+                x = base.offsetLeft - unitSizes.subWidth - spreadDistance;
+                y = base.offsetTop + unitSizes.baseSize + spreadDistance;
+            } else if (playerId === 3) {
+                x = base.offsetLeft + unitSizes.baseSize + spreadDistance;
+                y = base.offsetTop - unitSizes.subHeight - spreadDistance;
+            } else {
+                x = base.offsetLeft - unitSizes.subWidth - spreadDistance;
+                y = base.offsetTop - unitSizes.subHeight - spreadDistance;
+            }
+            
+            const submarine = {
+                id: player.submarines.length + 1,
+                playerId: playerId,
+                x: x,
+                y: y,
+                hp: SUBMARINE_HP,
+                hasAttacked: false
+            };
+            
+            player.submarines.push(submarine);
+            renderSubmarine(submarine);
+            
+            addMessage(`Player ${playerId} deployed a new submarine!`);
+        }
+
+        // Render a submarine on the map
+        function renderSubmarine(submarine) {
+            const subElement = document.createElement('div');
+            subElement.className = 'submarine';
+            subElement.id = `sub-${submarine.playerId}-${submarine.id}`;
+            subElement.style.left = submarine.x + 'px';
+            subElement.style.top = submarine.y + 'px';
+            
+            // Add player color indicator
+            subElement.classList.add(`player-${submarine.playerId}`);
+            
+            // Add HP display
+            const hpElement = document.createElement('div');
+            hpElement.className = 'unit-hp';
+            hpElement.id = `sub-hp-${submarine.playerId}-${submarine.id}`;
+            hpElement.textContent = `${submarine.hp} HP`;
+            subElement.appendChild(hpElement);
+            
+            // Add attack status indicator
+            const attackElement = document.createElement('div');
+            attackElement.className = 'attack-cooldown';
+            attackElement.id = `sub-attack-${submarine.playerId}-${submarine.id}`;
+            attackElement.textContent = submarine.hasAttacked ? 'CANNOT ATTACK' : 'READY';
+            subElement.appendChild(attackElement);
+            
+            // Add click event for selection
+            if (submarine.playerId === 1) {
+                subElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (gameState.currentPlayer === 1 && !gameState.gameOver) {
+                        selectSubmarine(submarine);
+                    }
+                });
+                
+                // Add touch event for mobile
+                subElement.addEventListener('touchend', (e) => {
+                    e.stopPropagation();
+                    if (gameState.currentPlayer === 1 && !gameState.gameOver) {
+                        selectSubmarine(submarine);
+                    }
+                });
+            }
+            
+            gameMap.appendChild(subElement);
+            updateUnitAttackStatus(submarine);
+        }
+
+        // Update unit attack status display
+        function updateUnitAttackStatus(unit) {
+            const isSub = unit.hasOwnProperty('hasAttacked');
+            const prefix = isSub ? 'sub' : 'jet';
+            const element = document.getElementById(`${prefix}-${unit.playerId}-${unit.id}`);
+            const attackElement = document.getElementById(`${prefix}-attack-${unit.playerId}-${unit.id}`);
+            
+            if (element && attackElement) {
+                if (unit.hasAttacked) {
+                    element.classList.remove('can-attack');
+                    attackElement.textContent = 'CANNOT ATTACK';
+                    attackElement.style.color = '#ff4444';
+                } else {
+                    element.classList.add('can-attack');
+                    attackElement.textContent = 'READY';
+                    attackElement.style.color = '#44ff44';
+                }
+            }
+        }
+
+        // Select a submarine
+        function selectSubmarine(submarine) {
+            // Deselect previous selection
+            if (gameState.selectedSub) {
+                const prevSub = document.getElementById(`sub-${gameState.selectedSub.playerId}-${gameState.selectedSub.id}`);
+                if (prevSub) prevSub.classList.remove('selected');
+            }
+            if (gameState.selectedJet) {
+                const prevJet = document.getElementById(`jet-${gameState.selectedJet.playerId}-${gameState.selectedJet.id}`);
+                if (prevJet) prevJet.classList.remove('selected');
+                gameState.selectedJet = null;
+            }
+            
+            gameState.selectedSub = submarine;
+            const subElement = document.getElementById(`sub-${submarine.playerId}-${submarine.id}`);
+            if (subElement) {
+                subElement.classList.add('selected');
+            }
+            
+            // Update move button visibility
+            updateControlModeDisplay();
+            
+            addMessage(`Selected submarine ${submarine.id}`);
+        }
+
+        // Select a jet
+        function selectJet(jet) {
+            // Deselect previous selection
+            if (gameState.selectedJet) {
+                const prevJet = document.getElementById(`jet-${gameState.selectedJet.playerId}-${gameState.selectedJet.id}`);
+                if (prevJet) prevJet.classList.remove('selected');
+            }
+            if (gameState.selectedSub) {
+                const prevSub = document.getElementById(`sub-${gameState.selectedSub.playerId}-${gameState.selectedSub.id}`);
+                if (prevSub) prevSub.classList.remove('selected');
+                gameState.selectedSub = null;
+            }
+            
+            gameState.selectedJet = jet;
+            const jetElement = document.getElementById(`jet-${jet.playerId}-${jet.id}`);
+            if (jetElement) {
+                jetElement.classList.add('selected');
+            }
+            
+            // Update move button visibility
+            updateControlModeDisplay();
+            
+            addMessage(`Selected jet ${jet.id}`);
+        }
+
+        // Start a new round
+        function startRound() {
+            if (gameState.gameOver) return;
+            
+            gameState.roundTime = 60;
+            updateTurnDisplay();
+            
+            // Reset attack status for current player's units
+            const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayer);
+            currentPlayer.submarines.forEach(sub => {
+                sub.hasAttacked = false;
+                updateUnitAttackStatus(sub);
+            });
+            currentPlayer.jets.forEach(jet => {
+                jet.hasAttacked = false;
+                updateUnitAttackStatus(jet);
+            });
+            
+            // Check if it's time to add new submarines (every 5 rounds for each player)
+            gameState.players.forEach(player => {
+                if (!player.baseDestroyed && player.turnsTaken > 0 && player.turnsTaken % 5 === 0) {
+                    addSubmarine(player.id);
+                    player.turnsTaken = 0;
+                }
+            });
+            
+            // Start the timer
+            gameState.roundTimer = setInterval(() => {
+                gameState.roundTime--;
+                updateTurnDisplay();
+                
+                if (gameState.roundTime <= 0) {
+                    endRound();
+                }
+            }, 1000);
+            
+            // If current player is AI, make AI moves
+            if (currentPlayer.isAI) {
+                setTimeout(() => {
+                    makeAIMoves(currentPlayer);
+                    endRound();
+                }, 2000);
+            }
+        }
+
+        // End the current round
+        function endRound() {
+            clearInterval(gameState.roundTimer);
+            
+            // Check for game over
+            checkGameOver();
+            if (gameState.gameOver) return;
+            
+            // Increment turn counter for current player
+            const currentPlayer = gameState.players.find(p => p.id === gameState.currentPlayer);
+            currentPlayer.turnsTaken++;
+            
+            // Move to next player
+            gameState.currentPlayer = gameState.currentPlayer % 4 + 1;
+            
+            // If we've completed a full cycle, increment round count and total turns
+            if (gameState.currentPlayer === 1) {
+                gameState.roundCount++;
+                gameState.totalTurns++;
+            }
+            
+            // Reset selection and move mode
+            if (gameState.selectedSub) {
+                const subElement = document.getElementById(`sub-${gameState.selectedSub.playerId}-${gameState.selectedSub.id}`);
+                if (subElement) subElement.classList.remove('selected');
+                gameState.selectedSub = null;
+            }
+            if (gameState.selectedJet) {
+                const jetElement = document.getElementById(`jet-${gameState.selectedJet.playerId}-${gameState.selectedJet.id}`);
+                if (jetElement) jetElement.classList.remove('selected');
+                gameState.selectedJet = null;
+            }
+            
+            gameState.moveModeActive = false;
+            updateControlModeDisplay();
+            
+            addMessage(`Player ${gameState.currentPlayer}'s turn`);
+            updateTurnDisplay();
+            
+            // Start next round
+            startRound();
+        }
+
+        // Check for game over
+        function checkGameOver() {
+            // Check if player 1 (human) has lost
+            const player1 = gameState.players[0];
+            const player1Lost = player1.baseDestroyed && player1.submarines.length === 0 && player1.jets.length === 0;
+            
+            // Check if all AI players have been eliminated
+            const aiPlayers = gameState.players.filter(p => p.isAI);
+            const allAIDestroyed = aiPlayers.every(ai => 
+                ai.baseDestroyed && ai.submarines.length === 0 && ai.jets.length === 0
+            );
+            
+            if (player1Lost) {
+                gameState.gameOver = true;
+                showGameOver("You Lost!", "Your base and all units have been destroyed.");
+                return;
+            }
+            
+            if (allAIDestroyed) {
+                gameState.gameOver = true;
+                showGameOver("Victory!", "You have destroyed all enemy bases and units!");
+                return;
+            }
+        }
+
+        // Show game over screen
+        function showGameOver(title, message) {
+            gameOverTitle.textContent = title;
+            gameOverMessage.textContent = message;
+            gameOverScreen.style.display = 'block';
+            
+            // Stop game timers
+            clearInterval(gameState.roundTimer);
+        }
+
+        // Restart the game
+        function restartGame() {
+            // Reset game state
+            gameState.players = [
+                { id: 1, baseHP: 500, submarines: [], jets: [], isAI: false, turnsTaken: 0, baseDestroyed: false },
+                { id: 2, baseHP: 500, submarines: [], jets: [], isAI: true, turnsTaken: 0, baseDestroyed: false },
+                { id: 3, baseHP: 500, submarines: [], jets: [], isAI: true, turnsTaken: 0, baseDestroyed: false },
+                { id: 4, baseHP: 500, submarines: [], jets: [], isAI: true, turnsTaken: 0, baseDestroyed: false }
+            ];
+            gameState.currentPlayer = 1;
+            gameState.roundTime = 60;
+            gameState.roundTimer = null;
+            gameState.roundCount = 1;
+            gameState.selectedSub = null;
+            gameState.selectedJet = null;
+            gameState.totalTurns = 1;
+            gameState.moveModeActive = false;
+            gameState.gameOver = false;
+            
+            // Clear the game map
+            gameMap.innerHTML = '';
+            
+            // Hide game over screen
+            gameOverScreen.style.display = 'none';
+            
+            // Reinitialize the game
+            placeBases();
+            
+            // Add initial submarines for each player
+            gameState.players.forEach(player => {
+                addSubmarine(player.id);
+            });
+            
+            // Update UI
+            updatePlayerUI();
+            updateTurnDisplay();
+            
+            // Start the first round
+            startRound();
+            
+            // Center the view on player 1 base
+            centerOnPlayer(1);
+            
+            // Update control mode display
+            updateControlModeDisplay();
+            
+            addMessage("New game started! Select your submarine to begin.");
+        }
+
+        // Make AI moves
+        function makeAIMoves(player) {
+            // Get all enemy players
+            const enemies = gameState.players.filter(p => p.id !== player.id && !p.baseDestroyed);
+            
+            // For each submarine
+            player.submarines.forEach(sub => {
+                // Find nearest enemy base
+                let nearestBase = null;
+                let minBaseDistance = Infinity;
+                
+                enemies.forEach(enemy => {
+                    const base = document.getElementById(`base-${enemy.id}`);
+                    const baseX = base.offsetLeft + base.offsetWidth / 2;
+                    const baseY = base.offsetTop + base.offsetHeight / 2;
+                    const distance = Math.sqrt(Math.pow(baseX - sub.x, 2) + Math.pow(baseY - sub.y, 2));
+                    
+                    if (distance < minBaseDistance) {
+                        minBaseDistance = distance;
+                        nearestBase = { playerId: enemy.id, x: baseX, y: baseY };
+                    }
+                });
+                
+                // Move towards nearest enemy base
+                if (nearestBase) {
+                    const directionX = nearestBase.x - sub.x;
+                    const directionY = nearestBase.y - sub.y;
+                    const distance = Math.sqrt(directionX * directionX + directionY * directionY);
+                    
+                    // Normalize direction and move
+                    const moveX = (directionX / distance) * SUBMARINE_MOVE_RANGE;
+                    const moveY = (directionY / distance) * SUBMARINE_MOVE_RANGE;
+                    
+                    const unitSizes = getUnitSizes();
+                    const newX = Math.max(0, Math.min(MAP_WIDTH - unitSizes.subWidth, sub.x + moveX));
+                    const newY = Math.max(0, Math.min(MAP_HEIGHT - unitSizes.subHeight, sub.y + moveY));
+                    
+                    moveSubmarine(sub, newX, newY);
+                }
+                
+                // Try to attack if hasn't attacked yet
+                if (!sub.hasAttacked) {
+                    const targets = findTargetsInRange(sub, SUBMARINE_RANGE);
+                    if (targets.length > 0) {
+                        // Prioritize bases over submarines
+                        const baseTargets = targets.filter(t => t.type === 'base');
+                        const finalTargets = baseTargets.length > 0 ? baseTargets : targets;
+                        const target = finalTargets[Math.floor(Math.random() * finalTargets.length)];
+                        attackWithSubmarine(sub, target);
+                    }
+                }
+            });
+            
+            // Deploy jets if available
+            if (!player.baseDestroyed && player.jets.length < JETS_PER_PLAYER) {
+                if (Math.random() < 0.7) {
+                    deployJet(player.id);
+                }
+            }
+            
+            // For each jet
+            player.jets.forEach(jet => {
+                // Find nearest enemy unit (jet or submarine)
+                let nearestEnemy = null;
+                let minEnemyDistance = Infinity;
+                
+                enemies.forEach(enemy => {
+                    // Check enemy jets
+                    enemy.jets.forEach(enemyJet => {
+                        const distance = Math.sqrt(Math.pow(enemyJet.x - jet.x, 2) + Math.pow(enemyJet.y - jet.y, 2));
+                        if (distance < minEnemyDistance) {
+                            minEnemyDistance = distance;
+                            nearestEnemy = { type: 'jet', playerId: enemy.id, id: enemyJet.id, x: enemyJet.x, y: enemyJet.y };
+                        }
+                    });
+                    
+                    // Check enemy submarines
+                    enemy.submarines.forEach(enemySub => {
+                        const distance = Math.sqrt(Math.pow(enemySub.x - jet.x, 2) + Math.pow(enemySub.y - jet.y, 2));
+                        if (distance < minEnemyDistance) {
+                            minEnemyDistance = distance;
+                            nearestEnemy = { type: 'submarine', playerId: enemy.id, id: enemySub.id, x: enemySub.x, y: enemySub.y };
+                        }
+                    });
+                });
+                
+                // Move towards nearest enemy unit
+                if (nearestEnemy) {
+                    const directionX = nearestEnemy.x - jet.x;
+                    const directionY = nearestEnemy.y - jet.y;
+                    const distance = Math.sqrt(directionX * directionX + directionY * directionY);
+                    
+                    // Normalize direction and move
+                    const moveX = (directionX / distance) * JET_MOVE_RANGE;
+                    const moveY = (directionY / distance) * JET_MOVE_RANGE;
+                    
+                    const unitSizes = getUnitSizes();
+                    const newX = Math.max(0, Math.min(MAP_WIDTH - unitSizes.jetWidth, jet.x + moveX));
+                    const newY = Math.max(0, Math.min(MAP_HEIGHT - unitSizes.jetHeight, jet.y + moveY));
+                    
+                    moveJet(jet, newX, newY);
+                }
+                
+                // Try to attack if hasn't attacked yet
+                if (!jet.hasAttacked) {
+                    const targets = findJetTargetsInRange(jet, JET_RANGE);
+                    if (targets.length > 0) {
+                        const target = targets[Math.floor(Math.random() * targets.length)];
+                        attackWithJet(jet, target);
+                    }
+                }
+            });
+        }
+
+        // Move a submarine
+        function moveSubmarine(submarine, newX, newY) {
+            const unitSizes = getUnitSizes();
+            
+            // Check if move is within range
+            const distance = Math.sqrt(Math.pow(newX - submarine.x, 2) + Math.pow(newY - submarine.y, 2));
+            if (distance > SUBMARINE_MOVE_RANGE) {
+                addMessage("Move is too far! Maximum range: " + SUBMARINE_MOVE_RANGE);
+                return false;
+            }
+            
+            // Check map boundaries
+            if (newX < 0 || newX > MAP_WIDTH - unitSizes.subWidth || 
+                newY < 0 || newY > MAP_HEIGHT - unitSizes.subHeight) {
+                addMessage("Cannot move outside the map!");
+                return false;
+            }
+            
+            // Show movement indicator
+            showMovementIndicator(submarine, newX, newY);
+            
+            submarine.x = newX;
+            submarine.y = newY;
+            
+            const subElement = document.getElementById(`sub-${submarine.playerId}-${submarine.id}`);
+            if (subElement) {
+                subElement.style.left = newX + 'px';
+                subElement.style.top = newY + 'px';
+            }
+            
+            addMessage(`Submarine moved to (${Math.round(newX)}, ${Math.round(newY)})`);
+            return true;
+        }
+
+        // Move a jet
+        function moveJet(jet, newX, newY) {
+            const unitSizes = getUnitSizes();
+            
+            // Check if move is within range
+            const distance = Math.sqrt(Math.pow(newX - jet.x, 2) + Math.pow(newY - jet.y, 2));
+            if (distance > JET_MOVE_RANGE) {
+                addMessage("Move is too far! Maximum range: " + JET_MOVE_RANGE);
+                return false;
+            }
+            
+            // Check map boundaries
+            if (newX < 0 || newX > MAP_WIDTH - unitSizes.jetWidth || 
+                newY < 0 || newY > MAP_HEIGHT - unitSizes.jetHeight) {
+                addMessage("Cannot move outside the map!");
+                return false;
+            }
+            
+            // Show movement indicator
+            showMovementIndicator(jet, newX, newY);
+            
+            jet.x = newX;
+            jet.y = newY;
+            
+            const jetElement = document.getElementById(`jet-${jet.playerId}-${jet.id}`);
+            if (jetElement) {
+                jetElement.style.left = newX + 'px';
+                jetElement.style.top = newY + 'px';
+            }
+            
+            addMessage(`Jet moved to (${Math.round(newX)}, ${Math.round(newY)})`);
+            return true;
+        }
+
+        // Show movement indicator
+        function showMovementIndicator(unit, newX, newY) {
+            // Remove any existing indicators
+            document.querySelectorAll('.movement-line, .movement-destination').forEach(el => el.remove());
+            
+            // Create line from unit to destination
+            const line = document.createElement('div');
+            line.className = 'movement-line';
+            
+            const dx = newX - unit.x;
+            const dy = newY - unit.y;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            line.style.left = unit.x + 'px';
+            line.style.top = unit.y + 'px';
+            line.style.width = length + 'px';
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            // Create destination marker
+            const marker = document.createElement('div');
+            marker.className = 'movement-destination';
+            marker.style.left = (newX - 5) + 'px';
+            marker.style.top = (newY - 5) + 'px';
+            
+            gameMap.appendChild(line);
+            gameMap.appendChild(marker);
+            
+            // Remove indicators after a delay
+            setTimeout(() => {
+                line.remove();
+                marker.remove();
+            }, 1000);
+        }
+
+        // Attack with a submarine
+        function attackWithSubmarine(submarine, target) {
+            // Check if submarine has already attacked
+            if (submarine.hasAttacked) {
+                return;
+            }
+            
+            // Play attack sound
+            attackSound.currentTime = 0;
+            attackSound.play();
+            
+            // Apply damage
+            if (target.type === 'base') {
+                const player = gameState.players.find(p => p.id === target.playerId);
+                player.baseHP = Math.max(0, player.baseHP - SUBMARINE_DAMAGE);
+                addMessage(`Player ${submarine.playerId} attacked Player ${target.playerId}'s base for ${SUBMARINE_DAMAGE} damage!`);
+                
+                // Update UI
+                updatePlayerUI();
+                
+                // Visual feedback
+                const baseElement = document.getElementById(`base-${target.playerId}`);
+                if (baseElement) {
+                    baseElement.classList.add('damage-animation');
+                    setTimeout(() => {
+                        baseElement.classList.remove('damage-animation');
+                    }, 500);
+                }
+                
+                // Check if base is destroyed
+                if (player.baseHP <= 0) {
+                    destroyBase(target.playerId);
+                }
+            } else if (target.type === 'submarine') {
+                // Find the actual submarine object in the game state
+                const targetPlayer = gameState.players.find(p => p.id === target.playerId);
+                const actualSub = targetPlayer.submarines.find(s => s.id === target.id);
+                
+                if (actualSub) {
+                    actualSub.hp = Math.max(0, actualSub.hp - SUBMARINE_DAMAGE);
+                    addMessage(`Player ${submarine.playerId} attacked Player ${target.playerId}'s submarine for ${SUBMARINE_DAMAGE} damage!`);
+                    
+                    // Update submarine HP display
+                    const hpElement = document.getElementById(`sub-hp-${target.playerId}-${target.id}`);
+                    if (hpElement) {
+                        hpElement.textContent = `${actualSub.hp} HP`;
+                    }
+                    
+                    // Visual feedback
+                    const targetElement = document.getElementById(`sub-${target.playerId}-${target.id}`);
+                    if (targetElement) {
+                        targetElement.classList.add('damage-animation');
+                        setTimeout(() => {
+                            targetElement.classList.remove('damage-animation');
+                        }, 500);
+                    }
+                    
+                    // Check if submarine is destroyed
+                    if (actualSub.hp <= 0) {
+                        destroySubmarine(actualSub);
+                    }
+                }
+            }
+            
+            // Mark submarine as having attacked
+            submarine.hasAttacked = true;
+            updateUnitAttackStatus(submarine);
+        }
+
+        // Attack with a jet
+        function attackWithJet(jet, target) {
+            // Check if jet has already attacked
+            if (jet.hasAttacked) {
+                return;
+            }
+            
+            // Play attack sound
+            attackSound.currentTime = 0;
+            attackSound.play();
+            
+            // Apply damage based on target type
+            if (target.type === 'jet') {
+                // Find the actual jet object in the game state
+                const targetPlayer = gameState.players.find(p => p.id === target.playerId);
+                const actualJet = targetPlayer.jets.find(j => j.id === target.id);
+                
+                if (actualJet) {
+                    actualJet.hp = Math.max(0, actualJet.hp - JET_DAMAGE);
+                    addMessage(`Player ${jet.playerId}'s jet attacked Player ${target.playerId}'s jet for ${JET_DAMAGE} damage!`);
+                    
+                    // Update jet HP display
+                    const hpElement = document.getElementById(`jet-hp-${target.playerId}-${target.id}`);
+                    if (hpElement) {
+                        hpElement.textContent = `${actualJet.hp} HP`;
+                    }
+                    
+                    // Visual feedback
+                    const targetElement = document.getElementById(`jet-${target.playerId}-${target.id}`);
+                    if (targetElement) {
+                        targetElement.classList.add('damage-animation');
+                        setTimeout(() => {
+                            targetElement.classList.remove('damage-animation');
+                        }, 500);
+                    }
+                    
+                    // Check if jet is destroyed
+                    if (actualJet.hp <= 0) {
+                        destroyJet(actualJet);
+                    }
+                }
+            } else if (target.type === 'submarine') {
+                // Find the actual submarine object in the game state
+                const targetPlayer = gameState.players.find(p => p.id === target.playerId);
+                const actualSub = targetPlayer.submarines.find(s => s.id === target.id);
+                
+                if (actualSub) {
+                    actualSub.hp = Math.max(0, actualSub.hp - JET_DAMAGE);
+                    addMessage(`Player ${jet.playerId}'s jet attacked Player ${target.playerId}'s submarine for ${JET_DAMAGE} damage!`);
+                    
+                    // Update submarine HP display
+                    const hpElement = document.getElementById(`sub-hp-${target.playerId}-${target.id}`);
+                    if (hpElement) {
+                        hpElement.textContent = `${actualSub.hp} HP`;
+                    }
+                    
+                    // Visual feedback
+                    const targetElement = document.getElementById(`sub-${target.playerId}-${target.id}`);
+                    if (targetElement) {
+                        targetElement.classList.add('damage-animation');
+                        setTimeout(() => {
+                            targetElement.classList.remove('damage-animation');
+                        }, 500);
+                    }
+                    
+                    // Check if submarine is destroyed
+                    if (actualSub.hp <= 0) {
+                        destroySubmarine(actualSub);
+                    }
+                }
+            }
+            
+            // Mark jet as having attacked
+            jet.hasAttacked = true;
+            updateUnitAttackStatus(jet);
+        }
+
+        // Deploy a jet
+        function deployJet(playerId) {
+            const player = gameState.players.find(p => p.id === playerId);
+            if (!player || player.jets.length >= JETS_PER_PLAYER || player.baseDestroyed) {
+                return false;
+            }
+            
+            const unitSizes = getUnitSizes();
+            
+            // Find player's base position
+            const base = document.getElementById(`base-${playerId}`);
+            
+            // Position jet near the base
+            const x = base.offsetLeft + (unitSizes.baseSize - unitSizes.jetWidth) / 2;
+            const y = base.offsetTop + (unitSizes.baseSize - unitSizes.jetHeight) / 2;
+            
+            const jet = {
+                id: player.jets.length + 1,
+                playerId: playerId,
+                x: x,
+                y: y,
+                hp: 100, // Jets have less HP than subs
+                hasAttacked: false
+            };
+            
+            player.jets.push(jet);
+            renderJet(jet);
+            
+            addMessage(`Player ${playerId} deployed a jet!`);
+            updatePlayerUI();
+            
+            return true;
+        }
+
+        // Render a jet on the map
+        function renderJet(jet) {
+            const jetElement = document.createElement('div');
+            jetElement.className = 'jet';
+            jetElement.id = `jet-${jet.playerId}-${jet.id}`;
+            jetElement.style.left = jet.x + 'px';
+            jetElement.style.top = jet.y + 'px';
+            
+            // Add player color indicator
+            jetElement.classList.add(`player-${jet.playerId}`);
+            
+            // Add HP display
+            const hpElement = document.createElement('div');
+            hpElement.className = 'unit-hp';
+            hpElement.id = `jet-hp-${jet.playerId}-${jet.id}`;
+            hpElement.textContent = `${jet.hp} HP`;
+            jetElement.appendChild(hpElement);
+            
+            // Add attack status indicator
+            const attackElement = document.createElement('div');
+            attackElement.className = 'attack-cooldown';
+            attackElement.id = `jet-attack-${jet.playerId}-${jet.id}`;
+            attackElement.textContent = jet.hasAttacked ? 'CANNOT ATTACK' : 'READY';
+            jetElement.appendChild(attackElement);
+            
+            // Add click event for selection (human player only)
+            if (jet.playerId === 1) {
+                jetElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (gameState.currentPlayer === 1 && !gameState.gameOver) {
+                        selectJet(jet);
+                    }
+                });
+                
+                // Add touch event for mobile
+                jetElement.addEventListener('touchend', (e) => {
+                    e.stopPropagation();
+                    if (gameState.currentPlayer === 1 && !gameState.gameOver) {
+                        selectJet(jet);
+                    }
+                });
+            }
+            
+            gameMap.appendChild(jetElement);
+            updateUnitAttackStatus(jet);
+        }
+
+        // Destroy a base
+        function destroyBase(playerId) {
+            const player = gameState.players.find(p => p.id === playerId);
+            if (player) {
+                player.baseDestroyed = true;
+                
+                const baseElement = document.getElementById(`base-${playerId}`);
+                if (baseElement) {
+                    baseElement.classList.add('base-destroyed');
+                }
+                
+                addMessage(`Player ${playerId}'s base has been destroyed! They can no longer produce units.`);
+                updatePlayerUI();
+                
+                // Check for game over
+                checkGameOver();
+            }
+        }
+
+        // Destroy a submarine
+        function destroySubmarine(submarine) {
+            const player = gameState.players.find(p => p.id === submarine.playerId);
+            if (player) {
+                player.submarines = player.submarines.filter(sub => sub.id !== submarine.id);
+                
+                const subElement = document.getElementById(`sub-${submarine.playerId}-${submarine.id}`);
+                if (subElement) {
+                    subElement.remove();
+                }
+                
+                addMessage(`Player ${submarine.playerId}'s submarine ${submarine.id} was destroyed!`);
+                updatePlayerUI();
+                
+                // Check for game over
+                checkGameOver();
+            }
+        }
+
+        // Destroy a jet
+        function destroyJet(jet) {
+            const player = gameState.players.find(p => p.id === jet.playerId);
+            if (player) {
+                player.jets = player.jets.filter(j => j.id !== jet.id);
+                
+                const jetElement = document.getElementById(`jet-${jet.playerId}-${jet.id}`);
+                if (jetElement) {
+                    jetElement.remove();
+                }
+                
+                addMessage(`Player ${jet.playerId}'s jet ${jet.id} was destroyed!`);
+                updatePlayerUI();
+                
+                // Check for game over
+                checkGameOver();
+            }
+        }
+
+        // Find targets in range of a submarine
+        function findTargetsInRange(submarine, range) {
+            const targets = [];
+            
+            // Check enemy bases
+            gameState.players.forEach(player => {
+                if (player.id !== submarine.playerId && !player.baseDestroyed) {
+                    const base = document.getElementById(`base-${player.id}`);
+                    
+                    const baseX = base.offsetLeft + base.offsetWidth / 2;
+                    const baseY = base.offsetTop + base.offsetHeight / 2;
+                    
+                    const distance = Math.sqrt(Math.pow(baseX - submarine.x, 2) + Math.pow(baseY - submarine.y, 2));
+                    
+                    if (distance <= range) {
+                        targets.push({
+                            type: 'base',
+                            playerId: player.id,
+                            distance: distance
+                        });
+                    }
+                }
+            });
+            
+            // Check enemy submarines
+            gameState.players.forEach(player => {
+                if (player.id !== submarine.playerId) {
+                    player.submarines.forEach(enemySub => {
+                        const distance = Math.sqrt(Math.pow(enemySub.x - submarine.x, 2) + Math.pow(enemySub.y - submarine.y, 2));
+                        
+                        if (distance <= range) {
+                            targets.push({
+                                type: 'submarine',
+                                playerId: enemySub.playerId,
+                                id: enemySub.id,
+                                hp: enemySub.hp,
+                                distance: distance
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return targets;
+        }
+
+        // Find jet targets in range
+        function findJetTargetsInRange(jet, range) {
+            const targets = [];
+            
+            // Check enemy jets
+            gameState.players.forEach(player => {
+                if (player.id !== jet.playerId) {
+                    player.jets.forEach(enemyJet => {
+                        const distance = Math.sqrt(Math.pow(enemyJet.x - jet.x, 2) + Math.pow(enemyJet.y - jet.y, 2));
+                        
+                        if (distance <= range) {
+                            targets.push({
+                                type: 'jet',
+                                playerId: enemyJet.playerId,
+                                id: enemyJet.id,
+                                hp: enemyJet.hp,
+                                distance: distance
+                            });
+                        }
+                    });
+                }
+            });
+            
+            // Check enemy submarines
+            gameState.players.forEach(player => {
+                if (player.id !== jet.playerId) {
+                    player.submarines.forEach(enemySub => {
+                        const distance = Math.sqrt(Math.pow(enemySub.x - jet.x, 2) + Math.pow(enemySub.y - jet.y, 2));
+                        
+                        if (distance <= range) {
+                            targets.push({
+                                type: 'submarine',
+                                playerId: enemySub.playerId,
+                                id: enemySub.id,
+                                hp: enemySub.hp,
+                                distance: distance
+                            });
+                        }
+                    });
+                }
+            });
+            
+            return targets;
+        }
+
+        // Update player UI
+        function updatePlayerUI() {
+            gameState.players.forEach(player => {
+                // Update base HP
+                document.getElementById(`p${player.id}-base-hp`).textContent = player.baseHP;
+                document.getElementById(`p${player.id}-base-health`).style.width = (player.baseHP / BASE_HP * 100) + '%';
+                
+                // Update submarine count
+                document.getElementById(`p${player.id}-subs`).textContent = player.submarines.length;
+                
+                // Update jet count
+                document.getElementById(`p${player.id}-jets`).textContent = player.jets.length;
+            });
+        }
+
+        // Add a message to the log
+        function addMessage(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.textContent = message;
+            messageLog.appendChild(messageElement);
+            
+            // Auto-scroll to bottom
+            messageLog.scrollTop = messageLog.scrollHeight;
+        }
+
+        // Event Listeners
+        attackSubButton.addEventListener('click', () => {
+            if (gameState.currentPlayer !== 1 || !gameState.selectedSub) {
+                addMessage("Select one of your submarines first!");
+                return;
+            }
+            
+            const targets = findTargetsInRange(gameState.selectedSub, SUBMARINE_RANGE);
+            if (targets.length === 0) {
+                addMessage("No targets in range!");
+                return;
+            }
+            
+            // Attack a random target
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            attackWithSubmarine(gameState.selectedSub, target);
+        });
+
+        attackJetButton.addEventListener('click', () => {
+            if (gameState.currentPlayer !== 1 || !gameState.selectedJet) {
+                addMessage("Select one of your jets first!");
+                return;
+            }
+            
+            const targets = findJetTargetsInRange(gameState.selectedJet, JET_RANGE);
+            if (targets.length === 0) {
+                addMessage("No targets in range!");
+                return;
+            }
+            
+            // Attack a random target
+            const target = targets[Math.floor(Math.random() * targets.length)];
+            attackWithJet(gameState.selectedJet, target);
+        });
+
+        deployJetButton.addEventListener('click', () => {
+            if (gameState.currentPlayer !== 1) {
+                addMessage("It's not your turn!");
+                return;
+            }
+            
+            deployJet(1);
+        });
+
+        endTurnButton.addEventListener('click', () => {
+            if (gameState.currentPlayer === 1) {
+                endRound();
+            } else {
+                addMessage("It's not your turn!");
+            }
+        });
+
+        // Add click event for the game map to deselect units
+        gameViewport.addEventListener('click', (e) => {
+            // Only deselect if clicking on empty space (not a unit) and not in move mode
+            if ((e.target === gameViewport || e.target === gameMap) && !gameState.moveModeActive && !gameState.gameOver) {
+                if (gameState.selectedSub) {
+                    const subElement = document.getElementById(`sub-${gameState.selectedSub.playerId}-${gameState.selectedSub.id}`);
+                    if (subElement) subElement.classList.remove('selected');
+                    gameState.selectedSub = null;
+                }
+                if (gameState.selectedJet) {
+                    const jetElement = document.getElementById(`jet-${gameState.selectedJet.playerId}-${gameState.selectedJet.id}`);
+                    if (jetElement) jetElement.classList.remove('selected');
+                    gameState.selectedJet = null;
+                }
+                updateControlModeDisplay();
+            }
+        });
+    </script>
+</body>
+</html>
