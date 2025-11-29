@@ -172,7 +172,7 @@
             box-shadow: 0 0 5px 2px lime;
         }
 
-        /* Mobile Controls - Improved layout */
+        /* Mobile Controls - FIXED: Made smaller and positioned properly */
         #mobile-controls {
             position: absolute;
             bottom: 5px;
@@ -180,25 +180,26 @@
             right: 5px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
+            gap: 4px;
             z-index: 30;
             background-color: rgba(0, 0, 0, 0.8);
-            padding: 8px;
-            border-radius: 10px;
+            padding: 6px;
+            border-radius: 8px;
+            max-height: 90px; /* Limit height */
         }
 
         .mobile-button {
             background-color: #1e90ff;
             color: white;
             border: none;
-            padding: 10px 5px;
-            border-radius: 6px;
-            font-size: 11px;
+            padding: 6px 3px;
+            border-radius: 5px;
+            font-size: 10px;
             touch-action: manipulation;
-            min-height: 40px;
+            min-height: 35px;
             word-wrap: break-word;
             white-space: normal;
-            line-height: 1.2;
+            line-height: 1.1;
         }
 
         .mobile-button:disabled {
@@ -344,9 +345,9 @@
             }
             
             .mobile-button {
-                font-size: 10px;
-                padding: 8px 4px;
-                min-height: 35px;
+                font-size: 9px;
+                padding: 5px 2px;
+                min-height: 30px;
             }
             
             #unit-selection {
@@ -370,26 +371,29 @@
             
             #mobile-controls {
                 bottom: 3px;
-                padding: 5px;
+                padding: 4px;
                 gap: 3px;
+                max-height: 80px;
             }
             
             .mobile-button {
-                font-size: 9px;
-                padding: 6px 3px;
-                min-height: 32px;
+                font-size: 8px;
+                padding: 4px 1px;
+                min-height: 28px;
             }
         }
 
-        /* Extra small screens */
-        @media (max-width: 360px) {
-            .mobile-button {
-                font-size: 8px;
-                padding: 5px 2px;
-            }
-            
+        /* Extra small screens - Stack buttons vertically */
+        @media (max-width: 360px) and (max-height: 640px) {
             #mobile-controls {
                 grid-template-columns: repeat(2, 1fr);
+                max-height: 120px;
+            }
+            
+            .mobile-button {
+                font-size: 8px;
+                padding: 3px 1px;
+                min-height: 25px;
             }
         }
     </style>
@@ -465,7 +469,7 @@
             <button class="zoom-button" id="reset-view">⟲</button>
         </div>
 
-        <!-- Mobile Controls - Improved Layout -->
+        <!-- Mobile Controls - Fixed Layout -->
         <div id="mobile-controls">
             <button class="mobile-button" id="select-units">SELECT</button>
             <button class="mobile-button move" id="move-unit">MOVE</button>
