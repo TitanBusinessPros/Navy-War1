@@ -75,7 +75,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            background-image: url('https://github.com/TitanBusinessPros/Navy-War1/raw/main/Navy%20War%20Tile-1.png');
+            background-image: url('https://github.com/TitanBusinessPros/Navy-War1/raw/main/Navy%20War%20Tile-2.png');
             background-size: 200px;
             transform-origin: 0 0;
             transition: transform 0.3s;
@@ -589,11 +589,11 @@
         // Game constants
         const SUBMARINE_HP = 200;
         const SUBMARINE_DAMAGE = 100;
-        const SUBMARINE_RANGE = 200;
-        const SUBMARINE_MOVE_RANGE = 300;
+        const SUBMARINE_RANGE = 500;
+        const SUBMARINE_MOVE_RANGE = 1000;
         const JET_DAMAGE = 50;
-        const JET_RANGE = 500;
-        const JET_MOVE_RANGE = 500;
+        const JET_RANGE = 1000;
+        const JET_MOVE_RANGE = 2000;
         const BASE_HP = 500;
         const JETS_PER_PLAYER = 5;
         
@@ -629,7 +629,7 @@
             startRound();
             
             // Start background music
-            backgroundMusic.volume = 0.3;
+            backgroundMusic.volume = 0.1;
             backgroundMusic.play().catch(e => {
                 console.log("Audio play failed:", e);
             });
