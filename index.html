@@ -6,16 +6,7 @@
     <title>Submarine Warfare</title>
     <link rel="icon" href="https://github.com/TitanBusinessPros/NGA-1/raw/main/Submarine.png" type="image/png">
     <style>
-        /* ===== SIZE CUSTOMIZATION VARIABLES ===== */
-        :root {
-            --base-size: 900px;
-            --submarine-width: 320px;
-            --submarine-height: 260px;
-            --jet-width: 290px;
-            --jet-height: 244px;
-            --map-size: 6000px;
-        }
-
+        /* Reset and base styles */
         * {
             margin: 0;
             padding: 0;
@@ -32,6 +23,8 @@
             color: white;
             overflow: hidden;
             touch-action: none;
+            width: 100vw;
+            height: 100vh;
         }
 
         #game-container {
@@ -42,7 +35,7 @@
             overflow: hidden;
         }
 
-        /* Simplified Game UI - No blocking elements */
+        /* Game UI */
         #game-ui {
             position: absolute;
             top: 5px;
@@ -67,45 +60,7 @@
             font-size: 10px;
         }
 
-        .player-info h3 {
-            color: #1e90ff;
-            font-size: 10px;
-            margin-bottom: 2px;
-        }
-
-        .player-stats {
-            display: flex;
-            justify-content: space-between;
-            font-size: 9px;
-        }
-
-        .health-bar {
-            width: 100%;
-            height: 6px;
-            background-color: #333;
-            border-radius: 3px;
-            margin-top: 2px;
-            overflow: hidden;
-        }
-
-        .health-fill {
-            height: 100%;
-            background-color: #4CAF50;
-            width: 100%;
-            transition: width 0.5s;
-        }
-
-        #turn-info {
-            position: absolute;
-            top: 60px;
-            left: 5px;
-            background-color: rgba(0, 0, 0, 0.7);
-            padding: 5px 8px;
-            border-radius: 3px;
-            z-index: 20;
-            font-size: 10px;
-        }
-
+        /* Game Viewport */
         #game-viewport {
             position: absolute;
             top: 0;
@@ -124,52 +79,8 @@
             background-size: 200px;
             transform-origin: 0 0;
             transition: transform 0.3s;
-        }
-
-        .submarine {
-            position: absolute;
-            width: var(--submarine-width);
-            height: var(--submarine-height);
-            background-image: url('https://github.com/TitanBusinessPros/NGA-1/raw/main/Submarine.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            z-index: 2;
-            transition: transform 0.5s;
-            touch-action: none;
-        }
-
-        .jet {
-            position: absolute;
-            width: var(--jet-width);
-            height: var(--jet-height);
-            background-image: url('https://github.com/TitanBusinessPros/NGA-1/raw/main/Jet%205.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            z-index: 2;
-            transition: transform 0.3s;
-            touch-action: none;
-        }
-
-        .base {
-            position: absolute;
-            width: var(--base-size);
-            height: var(--base-size);
-            background-image: url('https://github.com/TitanBusinessPros/NGA-1/raw/main/Submarine-Navy-Base.png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            z-index: 2;
-        }
-
-        .base-destroyed {
-            filter: grayscale(100%) brightness(0.5);
-        }
-
-        .selected {
-            box-shadow: 0 0 10px 3px yellow !important;
-        }
-
-        .can-attack {
-            box-shadow: 0 0 5px 2px lime;
+            width: 6000px;
+            height: 6000px;
         }
 
         /* MOBILE CONTROLS - COMPLETELY REDESIGNED */
@@ -181,11 +92,11 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            gap: 4px;
+            gap: 5px;
             z-index: 30;
-            background-color: rgba(0, 0, 0, 0.9);
-            padding: 8px;
-            height: 120px; /* Fixed height to ensure all buttons are visible */
+            background-color: rgba(0, 0, 0, 0.95);
+            padding: 10px 5px;
+            height: 140px; /* Fixed height to ensure all buttons are visible */
             border-top: 2px solid #1e90ff;
         }
 
@@ -193,24 +104,25 @@
             background-color: #1e90ff;
             color: white;
             border: none;
-            border-radius: 6px;
-            font-size: 11px;
+            border-radius: 8px;
+            font-size: 12px;
             touch-action: manipulation;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 6px 2px;
-            min-height: 45px;
+            padding: 8px 4px;
+            min-height: 55px;
             word-wrap: break-word;
             white-space: normal;
             line-height: 1.2;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            font-weight: bold;
         }
 
         .mobile-button:active {
             transform: scale(0.95);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
 
         .mobile-button:disabled {
@@ -230,6 +142,18 @@
         .mobile-button.deploy {
             background-color: #ffff44;
             color: black;
+        }
+
+        /* Turn Info */
+        #turn-info {
+            position: absolute;
+            top: 60px;
+            left: 5px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 5px 8px;
+            border-radius: 3px;
+            z-index: 20;
+            font-size: 10px;
         }
 
         /* Unit selection panel */
@@ -257,7 +181,7 @@
             background-color: rgba(255, 255, 0, 0.5);
         }
 
-        /* Zoom controls - simplified */
+        /* Zoom controls */
         #zoom-controls {
             position: absolute;
             top: 80px;
@@ -335,9 +259,51 @@
             display: none;
         }
 
-        /* Remove obstructive elements */
-        #size-info, #control-mode, #mini-map, #pan-controls, #message-log {
-            display: none !important;
+        /* Game elements */
+        .submarine {
+            position: absolute;
+            width: 320px;
+            height: 260px;
+            background-image: url('https://github.com/TitanBusinessPros/NGA-1/raw/main/Submarine.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 2;
+            transition: transform 0.5s;
+            touch-action: none;
+        }
+
+        .jet {
+            position: absolute;
+            width: 290px;
+            height: 244px;
+            background-image: url('https://github.com/TitanBusinessPros/NGA-1/raw/main/Jet%205.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 2;
+            transition: transform 0.3s;
+            touch-action: none;
+        }
+
+        .base {
+            position: absolute;
+            width: 900px;
+            height: 900px;
+            background-image: url('https://github.com/TitanBusinessPros/NGA-1/raw/main/Submarine-Navy-Base.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            z-index: 2;
+        }
+
+        .base-destroyed {
+            filter: grayscale(100%) brightness(0.5);
+        }
+
+        .selected {
+            box-shadow: 0 0 10px 3px yellow !important;
+        }
+
+        .can-attack {
+            box-shadow: 0 0 5px 2px lime;
         }
 
         /* Mobile-specific adjustments */
@@ -357,9 +323,9 @@
             }
             
             .mobile-button {
-                font-size: 10px;
-                padding: 5px 2px;
-                min-height: 42px;
+                font-size: 11px;
+                padding: 7px 3px;
+                min-height: 50px;
             }
             
             #unit-selection {
@@ -382,42 +348,68 @@
             }
             
             #mobile-controls {
-                padding: 6px;
-                gap: 3px;
-                height: 110px;
+                padding: 8px 4px;
+                gap: 4px;
+                height: 130px;
             }
             
             .mobile-button {
-                font-size: 9px;
-                padding: 4px 1px;
-                min-height: 40px;
+                font-size: 10px;
+                padding: 6px 2px;
+                min-height: 48px;
             }
         }
 
-        /* Extra small screens */
+        /* Extra small screens - 2x3 grid */
         @media (max-width: 360px) {
             #mobile-controls {
                 grid-template-columns: repeat(2, 1fr);
                 grid-template-rows: repeat(3, 1fr);
-                height: 150px;
+                height: 180px;
             }
             
             .mobile-button {
-                font-size: 9px;
-                padding: 4px 1px;
-                min-height: 42px;
+                font-size: 10px;
+                padding: 6px 2px;
+                min-height: 50px;
             }
         }
 
         /* Ultra small screens */
         @media (max-width: 320px) {
             #mobile-controls {
-                height: 140px;
+                height: 170px;
             }
             
             .mobile-button {
-                font-size: 8px;
+                font-size: 9px;
+                min-height: 48px;
+            }
+        }
+
+        /* For very short screens */
+        @media (max-height: 600px) {
+            #mobile-controls {
+                height: 120px;
+            }
+            
+            .mobile-button {
+                min-height: 45px;
+                font-size: 10px;
+                padding: 5px 2px;
+            }
+        }
+
+        /* For extremely short screens */
+        @media (max-height: 500px) {
+            #mobile-controls {
+                height: 100px;
+            }
+            
+            .mobile-button {
                 min-height: 40px;
+                font-size: 9px;
+                padding: 4px 1px;
             }
         }
     </style>
@@ -543,7 +535,7 @@
             totalTurns: 1,
             moveModeActive: false,
             gameOver: false,
-            isMobile: true, // Force mobile mode
+            isMobile: true,
             touchZoomEnabled: true
         };
 
@@ -557,7 +549,6 @@
             dragStartY: 0,
             dragStartOffsetX: 0,
             dragStartOffsetY: 0,
-            // For pinch zoom
             pinchZoom: false,
             initialPinchDistance: 0,
             initialScale: 1,
@@ -603,20 +594,9 @@
         const BASE_HP = 500;
         const JETS_PER_PLAYER = 5;
         
-        // Map size from CSS variable
+        // Map size
         const MAP_WIDTH = 6000;
         const MAP_HEIGHT = 6000;
-
-        // Get CSS variable values for unit sizes
-        function getUnitSizes() {
-            return {
-                baseSize: 900,
-                subWidth: 320,
-                subHeight: 260,
-                jetWidth: 290,
-                jetHeight: 244
-            };
-        }
 
         // Initialize the game when page loads
         window.addEventListener('load', function() {
@@ -790,9 +770,8 @@
                     // Check if we tapped on a player unit
                     const playerUnits = [...gameState.players[0].submarines, ...gameState.players[0].jets];
                     for (const unit of playerUnits) {
-                        const unitSizes = getUnitSizes();
-                        const unitWidth = unit.hasOwnProperty('hasAttacked') ? unitSizes.subWidth : unitSizes.jetWidth;
-                        const unitHeight = unit.hasOwnProperty('hasAttacked') ? unitSizes.subHeight : unitSizes.jetHeight;
+                        const unitWidth = unit.hasOwnProperty('hasAttacked') ? 320 : 290;
+                        const unitHeight = unit.hasOwnProperty('hasAttacked') ? 260 : 244;
                         
                         if (mapX >= unit.x && mapX <= unit.x + unitWidth &&
                             mapY >= unit.y && mapY <= unit.y + unitHeight) {
@@ -1001,13 +980,12 @@
 
         // Place player bases at the corners of the map
         function placeBases() {
-            const unitSizes = getUnitSizes();
             const baseMargin = 800;
             const basePositions = [
                 { x: baseMargin, y: baseMargin },
-                { x: MAP_WIDTH - baseMargin - unitSizes.baseSize, y: baseMargin },
-                { x: baseMargin, y: MAP_HEIGHT - baseMargin - unitSizes.baseSize },
-                { x: MAP_WIDTH - baseMargin - unitSizes.baseSize, y: MAP_HEIGHT - baseMargin - unitSizes.baseSize }
+                { x: MAP_WIDTH - baseMargin - 900, y: baseMargin },
+                { x: baseMargin, y: MAP_HEIGHT - baseMargin - 900 },
+                { x: MAP_WIDTH - baseMargin - 900, y: MAP_HEIGHT - baseMargin - 900 }
             ];
             
             gameState.players.forEach((player, index) => {
@@ -1025,8 +1003,6 @@
             const player = gameState.players.find(p => p.id === playerId);
             if (!player || player.baseDestroyed) return;
             
-            const unitSizes = getUnitSizes();
-            
             // Find player's base position
             const base = document.getElementById(`base-${playerId}`);
             
@@ -1035,17 +1011,17 @@
             const spreadDistance = 300;
             
             if (playerId === 1) {
-                x = base.offsetLeft + unitSizes.baseSize + spreadDistance;
-                y = base.offsetTop + unitSizes.baseSize + spreadDistance;
+                x = base.offsetLeft + 900 + spreadDistance;
+                y = base.offsetTop + 900 + spreadDistance;
             } else if (playerId === 2) {
-                x = base.offsetLeft - unitSizes.subWidth - spreadDistance;
-                y = base.offsetTop + unitSizes.baseSize + spreadDistance;
+                x = base.offsetLeft - 320 - spreadDistance;
+                y = base.offsetTop + 900 + spreadDistance;
             } else if (playerId === 3) {
-                x = base.offsetLeft + unitSizes.baseSize + spreadDistance;
-                y = base.offsetTop - unitSizes.subHeight - spreadDistance;
+                x = base.offsetLeft + 900 + spreadDistance;
+                y = base.offsetTop - 260 - spreadDistance;
             } else {
-                x = base.offsetLeft - unitSizes.subWidth - spreadDistance;
-                y = base.offsetTop - unitSizes.subHeight - spreadDistance;
+                x = base.offsetLeft - 320 - spreadDistance;
+                y = base.offsetTop - 260 - spreadDistance;
             }
             
             const submarine = {
@@ -1336,9 +1312,8 @@
                     const moveX = (directionX / distance) * SUBMARINE_MOVE_RANGE;
                     const moveY = (directionY / distance) * SUBMARINE_MOVE_RANGE;
                     
-                    const unitSizes = getUnitSizes();
-                    const newX = Math.max(0, Math.min(MAP_WIDTH - unitSizes.subWidth, sub.x + moveX));
-                    const newY = Math.max(0, Math.min(MAP_HEIGHT - unitSizes.subHeight, sub.y + moveY));
+                    const newX = Math.max(0, Math.min(MAP_WIDTH - 320, sub.x + moveX));
+                    const newY = Math.max(0, Math.min(MAP_HEIGHT - 260, sub.y + moveY));
                     
                     moveSubmarine(sub, newX, newY);
                 }
@@ -1399,9 +1374,8 @@
                     const moveX = (directionX / distance) * JET_MOVE_RANGE;
                     const moveY = (directionY / distance) * JET_MOVE_RANGE;
                     
-                    const unitSizes = getUnitSizes();
-                    const newX = Math.max(0, Math.min(MAP_WIDTH - unitSizes.jetWidth, jet.x + moveX));
-                    const newY = Math.max(0, Math.min(MAP_HEIGHT - unitSizes.jetHeight, jet.y + moveY));
+                    const newX = Math.max(0, Math.min(MAP_WIDTH - 290, jet.x + moveX));
+                    const newY = Math.max(0, Math.min(MAP_HEIGHT - 244, jet.y + moveY));
                     
                     moveJet(jet, newX, newY);
                 }
@@ -1419,8 +1393,6 @@
 
         // Move a submarine
         function moveSubmarine(submarine, newX, newY) {
-            const unitSizes = getUnitSizes();
-            
             // Check if move is within range
             const distance = Math.sqrt(Math.pow(newX - submarine.x, 2) + Math.pow(newY - submarine.y, 2));
             if (distance > SUBMARINE_MOVE_RANGE) {
@@ -1429,8 +1401,8 @@
             }
             
             // Check map boundaries
-            if (newX < 0 || newX > MAP_WIDTH - unitSizes.subWidth || 
-                newY < 0 || newY > MAP_HEIGHT - unitSizes.subHeight) {
+            if (newX < 0 || newX > MAP_WIDTH - 320 || 
+                newY < 0 || newY > MAP_HEIGHT - 260) {
                 showStatusMessage("Cannot move outside the map!");
                 return false;
             }
@@ -1449,8 +1421,6 @@
 
         // Move a jet
         function moveJet(jet, newX, newY) {
-            const unitSizes = getUnitSizes();
-            
             // Check if move is within range
             const distance = Math.sqrt(Math.pow(newX - jet.x, 2) + Math.pow(newY - jet.y, 2));
             if (distance > JET_MOVE_RANGE) {
@@ -1459,8 +1429,8 @@
             }
             
             // Check map boundaries
-            if (newX < 0 || newX > MAP_WIDTH - unitSizes.jetWidth || 
-                newY < 0 || newY > MAP_HEIGHT - unitSizes.jetHeight) {
+            if (newX < 0 || newX > MAP_WIDTH - 290 || 
+                newY < 0 || newY > MAP_HEIGHT - 244) {
                 showStatusMessage("Cannot move outside the map!");
                 return false;
             }
@@ -1586,14 +1556,12 @@
                 return false;
             }
             
-            const unitSizes = getUnitSizes();
-            
             // Find player's base position
             const base = document.getElementById(`base-${playerId}`);
             
             // Position jet near the base
-            const x = base.offsetLeft + (unitSizes.baseSize - unitSizes.jetWidth) / 2;
-            const y = base.offsetTop + (unitSizes.baseSize - unitSizes.jetHeight) / 2;
+            const x = base.offsetLeft + (900 - 290) / 2;
+            const y = base.offsetTop + (900 - 244) / 2;
             
             const jet = {
                 id: player.jets.length + 1,
