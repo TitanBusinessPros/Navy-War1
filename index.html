@@ -83,10 +83,10 @@
             height: 6000px;
         }
 
-        /* MOBILE CONTROLS - COMPLETELY REDESIGNED */
+        /* MOBILE CONTROLS - POSITIONED HIGHER */
         #mobile-controls {
             position: absolute;
-            bottom: 0;
+            bottom: 60px; /* Moved up from bottom: 0 */
             left: 0;
             right: 0;
             display: grid;
@@ -96,8 +96,9 @@
             z-index: 30;
             background-color: rgba(0, 0, 0, 0.95);
             padding: 10px 5px;
-            height: 140px; /* Fixed height to ensure all buttons are visible */
+            height: 130px; /* Slightly reduced height */
             border-top: 2px solid #1e90ff;
+            border-bottom: 2px solid #1e90ff;
         }
 
         .mobile-button {
@@ -112,7 +113,7 @@
             justify-content: center;
             text-align: center;
             padding: 8px 4px;
-            min-height: 55px;
+            min-height: 50px; /* Slightly reduced height */
             word-wrap: break-word;
             white-space: normal;
             line-height: 1.2;
@@ -325,7 +326,7 @@
             .mobile-button {
                 font-size: 11px;
                 padding: 7px 3px;
-                min-height: 50px;
+                min-height: 48px;
             }
             
             #unit-selection {
@@ -350,13 +351,13 @@
             #mobile-controls {
                 padding: 8px 4px;
                 gap: 4px;
-                height: 130px;
+                height: 120px;
             }
             
             .mobile-button {
                 font-size: 10px;
                 padding: 6px 2px;
-                min-height: 48px;
+                min-height: 46px;
             }
         }
 
@@ -365,36 +366,37 @@
             #mobile-controls {
                 grid-template-columns: repeat(2, 1fr);
                 grid-template-rows: repeat(3, 1fr);
-                height: 180px;
+                height: 160px; /* Adjusted for new position */
             }
             
             .mobile-button {
                 font-size: 10px;
                 padding: 6px 2px;
-                min-height: 50px;
+                min-height: 46px;
             }
         }
 
         /* Ultra small screens */
         @media (max-width: 320px) {
             #mobile-controls {
-                height: 170px;
+                height: 150px;
             }
             
             .mobile-button {
                 font-size: 9px;
-                min-height: 48px;
+                min-height: 44px;
             }
         }
 
         /* For very short screens */
         @media (max-height: 600px) {
             #mobile-controls {
-                height: 120px;
+                height: 110px;
+                bottom: 40px; /* Adjusted for shorter screens */
             }
             
             .mobile-button {
-                min-height: 45px;
+                min-height: 42px;
                 font-size: 10px;
                 padding: 5px 2px;
             }
@@ -403,11 +405,12 @@
         /* For extremely short screens */
         @media (max-height: 500px) {
             #mobile-controls {
-                height: 100px;
+                height: 90px;
+                bottom: 30px; /* Adjusted for very short screens */
             }
             
             .mobile-button {
-                min-height: 40px;
+                min-height: 38px;
                 font-size: 9px;
                 padding: 4px 1px;
             }
@@ -485,7 +488,7 @@
             <button class="zoom-button" id="reset-view">⟲</button>
         </div>
 
-        <!-- Mobile Controls - COMPLETELY REDESIGNED -->
+        <!-- Mobile Controls - MOVED HIGHER -->
         <div id="mobile-controls">
             <button class="mobile-button" id="select-units">SELECT</button>
             <button class="mobile-button move" id="move-unit">MOVE</button>
